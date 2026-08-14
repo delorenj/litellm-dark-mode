@@ -1,0 +1,21 @@
+{
+  "project_name": "Litellm Dark Mode",
+  "project_description": "A zero-friction, reversible dark-mode patcher for the LiteLLM dashboard.",
+  "project_slug": "litellm-dark-mode",
+  "repo_path": "/home/delorenj/code/litellm-dark-mode",
+  "ticket_provider": {
+    "type": "plane",
+    "workspace": "33god",
+    "identifier": "LITE",
+    "board_id": "",
+    "state": "planned"
+  },
+  "agents": {},
+  "automation": {
+    "reconcile": {
+      "enabled": false,
+      "grace_hours": 0,
+      "auto_review": true
+    }
+  }
+}

@@ -1,0 +1,5 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_src_path: /home/delorenj/code/33GOD/pjangler/templates/commonproject
+project_description: A zero-friction, reversible dark-mode patcher for the LiteLLM dashboard.
+project_name: Litellm Dark Mode
+ticket_provider: plane
