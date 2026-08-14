@@ -16,7 +16,7 @@ import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
 
-export const PACKAGE_VERSION = "0.1.0";
+export const PACKAGE_VERSION = "0.2.0";
 export const MANIFEST_NAME = ".litellm-dark-mode.json";
 
 const MANIFEST_SCHEMA_VERSION = 1;

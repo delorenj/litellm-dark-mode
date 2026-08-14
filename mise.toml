@@ -1,6 +1,11 @@
 # mise configuration for Litellm Dark Mode
 # https://mise.jdx.dev/configuration.html
 
+[tools]
+# npm 12 in the current Node 26 install is missing its bundled sigstore module.
+# Pin the known-good LTS toolchain used for releases and the CI compatibility floor.
+node = "24.15.0"
+
 [env]
 _.path = [".mise/scripts", "agents/hermes/pm"]
 _.file = [".env"]

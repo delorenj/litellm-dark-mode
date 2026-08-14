@@ -1,4 +1,10 @@
 import path from "node:path";
+import {
+  buildDockerImage,
+  DEFAULT_DARK_IMAGE,
+  DEFAULT_LITELLM_IMAGE,
+  formatDockerBuildCommand,
+} from "./docker.js";
 import { applyPatch, getPatchStatus, LiteLLMDarkModeError, PACKAGE_VERSION, undoPatch } from "./patcher.js";
 
 const HELP = `
@@ -9,9 +15,14 @@ extended stay in review.
 
 Usage:
   litellm-dark-mode [path] [options]
+  litellm-dark-mode docker [options]
 
 Arguments:
   path              LiteLLM repo root or ui/litellm-dashboard (default: .)
+
+Docker options:
+  --image IMAGE     LiteLLM base image (default: ${DEFAULT_LITELLM_IMAGE})
+  --tag IMAGE       Tag for the derived image (default: ${DEFAULT_DARK_IMAGE})
 
 Options:
   --check           Verify that the patch is installed and untouched
@@ -25,28 +36,48 @@ Options:
 `;
 
 export function parseArgs(argv) {
+  const dockerMode = argv[0] === "docker";
+  const argumentsToParse = dockerMode ? argv.slice(1) : argv;
   const options = {
-    action: "apply",
+    action: dockerMode ? "docker" : "apply",
+    mode: dockerMode ? "docker" : "source",
     dryRun: false,
     force: false,
     quiet: false,
     snark: true,
     path: ".",
+    image: DEFAULT_LITELLM_IMAGE,
+    tag: DEFAULT_DARK_IMAGE,
   };
   const positional = [];
 
-  for (let index = 0; index < argv.length; index += 1) {
-    const argument = argv[index];
+  for (let index = 0; index < argumentsToParse.length; index += 1) {
+    const argument = argumentsToParse[index];
     if (argument === "--") {
-      positional.push(...argv.slice(index + 1));
+      positional.push(...argumentsToParse.slice(index + 1));
       break;
     }
-    if (argument === "--check") options.action = "check";
-    else if (argument === "--undo") options.action = "undo";
+    if (argument === "--check") {
+      if (dockerMode) throw new LiteLLMDarkModeError("Docker images are immutable; check the image label instead.", "USAGE");
+      options.action = "check";
+    } else if (argument === "--undo") {
+      if (dockerMode) throw new LiteLLMDarkModeError("Undo Docker mode by restoring the original image reference.", "USAGE");
+      options.action = "undo";
+    }
     else if (argument === "--dry-run") options.dryRun = true;
     else if (argument === "--force") options.force = true;
     else if (argument === "--quiet") options.quiet = true;
     else if (argument === "--no-snark") options.snark = false;
+    else if (argument === "--image" || argument === "--tag") {
+      if (!dockerMode) throw new LiteLLMDarkModeError(`${argument} is only valid after the docker subcommand.`, "USAGE");
+      const value = argumentsToParse[index + 1];
+      if (!value || value.startsWith("-")) {
+        throw new LiteLLMDarkModeError(`${argument} requires a Docker image reference.`, "USAGE");
+      }
+      if (argument === "--image") options.image = value;
+      else options.tag = value;
+      index += 1;
+    }
     else if (argument === "-h" || argument === "--help") options.action = "help";
     else if (argument === "-v" || argument === "--version") options.action = "version";
     else if (argument.startsWith("-")) {
@@ -54,10 +85,13 @@ export function parseArgs(argv) {
     } else positional.push(argument);
   }
 
-  if (positional.length > 1) {
+  if (dockerMode && positional.length > 0) {
+    throw new LiteLLMDarkModeError("Docker mode takes options, not a source path.", "USAGE");
+  }
+  if (!dockerMode && positional.length > 1) {
     throw new LiteLLMDarkModeError("Pass exactly one LiteLLM source path.", "USAGE");
   }
-  if (positional.length === 1) options.path = positional[0];
+  if (!dockerMode && positional.length === 1) options.path = positional[0];
   if (options.force && options.action !== "undo") {
     throw new LiteLLMDarkModeError("--force is intentionally limited to --undo.", "USAGE");
   }
@@ -95,9 +129,24 @@ export async function runCli(argv, streams = { stdout: process.stdout, stderr: p
 
     if (!options.quiet) {
       out(`litellm-dark-mode v${PACKAGE_VERSION}`);
-      if (options.snark && options.action === "apply") {
+      if (options.snark && options.action === "docker") {
+        out("Your container is disposable. The interrogation lamp no longer has to be.");
+      } else if (options.snark && options.action === "apply") {
         out("Upstream has the tokens. The open PR has the CSS. Your retinas have waited long enough.");
       }
+    }
+
+    if (options.action === "docker") {
+      const result = await buildDockerImage(
+        { image: options.image, tag: options.tag, dryRun: options.dryRun },
+        streams,
+      );
+      if (!options.quiet) {
+        if (result.status === "would-build") out(`Would run: ${formatDockerBuildCommand(result)}`);
+        else out(`Built ${result.tag} from ${result.image}.`);
+        out(`Use it in Compose with: image: ${result.tag}`);
+      }
+      return 0;
     }
 
     if (options.action === "check") {

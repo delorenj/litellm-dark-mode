@@ -1,6 +1,6 @@
 {
   "name": "litellm-dark-mode",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A zero-friction, reversible dark-mode patcher for the LiteLLM dashboard.",
   "type": "module",
   "bin": {
@@ -9,13 +9,16 @@
   "files": [
     "assets/",
     "bin/",
+    "docker/Dockerfile",
+    "docker/Dockerfile.dockerignore",
+    "docker/patch-image.py",
     "src/",
     "LICENSE",
     "README.md",
     "THIRD_PARTY_NOTICES.md"
   ],
   "scripts": {
-    "check": "node --check bin/litellm-dark-mode.js && node --check src/cli.js && node --check src/patcher.js",
+    "check": "node --check bin/litellm-dark-mode.js && node --check src/cli.js && node --check src/docker.js && node --check src/patcher.js",
     "test": "node --test",
     "prepublishOnly": "npm run check && npm test"
   },

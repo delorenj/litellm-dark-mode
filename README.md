@@ -10,6 +10,15 @@ npx litellm-dark-mode /path/to/cloned/litellm
 
 Then rebuild the dashboard normally. The patch is build-time, browser-independent, deterministic, and safe to rerun.
 
+Already running LiteLLM from an image instead of a source checkout? Build a thin,
+immutable dark-mode image on top of the exact LiteLLM image you already trust:
+
+```bash
+npx litellm-dark-mode docker \
+  --image ghcr.io/berriai/litellm@sha256:YOUR_PINNED_DIGEST \
+  --tag litellm-dark-mode:local
+```
+
 ## What it changes
 
 The CLI accepts either a LiteLLM repository root or its `ui/litellm-dashboard` directory. It:
@@ -62,11 +71,51 @@ npm run build
 
 LiteLLM's own build and image assembly steps remain authoritative; this package only patches the dashboard source tree.
 
+## Docker deployments
+
+Docker mode creates a derived image; it never edits a running container. The
+base image, entrypoint, command, environment, and application data remain
+unchanged. The added layer:
+
+1. locates LiteLLM's packaged static dashboard export;
+2. validates every exported HTML page and CSS chunk before writing;
+3. forces the root `dark` class before hydration and appends the same
+   compatibility CSS used by source mode;
+4. records before/after hashes in `.litellm-dark-mode-docker.json` inside the
+   image and labels the image with the patcher version.
+
+Use the resulting tag in Compose:
+
+```yaml
+services:
+  litellm:
+    image: litellm-dark-mode:local
+```
+
+Preview the exact build command without touching Docker:
+
+```bash
+npx litellm-dark-mode docker \
+  --image ghcr.io/berriai/litellm@sha256:YOUR_PINNED_DIGEST \
+  --tag litellm-dark-mode:local \
+  --dry-run
+```
+
+To undo Docker mode, restore the original `image:` reference and recreate the
+service. When upgrading LiteLLM, rerun the Docker command with the new pinned
+digest. The build fails closed if LiteLLM stops shipping the expected static
+HTML/CSS export, or if the base image was already partially patched.
+
+Source mode remains the most complete integration because it also selects Ant
+Design's native dark algorithm before compilation. Docker mode targets prebuilt
+official images, where the source compiler is no longer available, and uses the
+compatibility layer to cover those shipped components instead.
+
 ## Compatibility policy
 
 The patcher targets the current Tailwind v4 dashboard and validates every source seam before writing. When upstream moves a relevant file, it fails closed with a useful error instead of spraying a half-applied theme across the tree. Writes are atomic and roll back on failure.
 
-The first release is validated against LiteLLM `litellm_internal_staging` revision `69b0296ca342` from 2026-08-13. A normal upstream dark mode should eventually make this package obsolete. That will be a successful deprecation, not a tragedy.
+Source mode is validated against LiteLLM `litellm_internal_staging` revision `69b0296ca342` from 2026-08-13. Docker mode is validated against the official image's packaged export and deliberately keys compatibility to structure rather than mutable chunk names. A normal upstream dark mode should eventually make this package obsolete. That will be a successful deprecation, not a tragedy.
 
 ## Credit where it is overdue
 

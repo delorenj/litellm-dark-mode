@@ -1,0 +1,6 @@
+*
+!assets/
+!assets/litellm-dark-mode.css
+!docker/
+!docker/Dockerfile
+!docker/patch-image.py
