@@ -19,7 +19,7 @@
   ],
   "scripts": {
     "check": "node --check bin/litellm-dark-mode.js && node --check src/cli.js && node --check src/docker.js && node --check src/patcher.js",
-    "test": "node --test",
+    "test": "node --test test/*.test.js",
     "prepublishOnly": "npm run check && npm test"
   },
   "engines": {
