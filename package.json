@@ -1,6 +1,6 @@
 {
   "name": "litellm-dark-mode",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A zero-friction, reversible dark-mode patcher for the LiteLLM dashboard.",
   "type": "module",
   "bin": {
