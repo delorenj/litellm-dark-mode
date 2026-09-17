@@ -10,12 +10,5 @@
     "board_id": "",
     "state": "planned"
   },
-  "agents": {},
-  "automation": {
-    "reconcile": {
-      "enabled": false,
-      "grace_hours": 0,
-      "auto_review": true
-    }
-  }
+  "agents": {}
 }
