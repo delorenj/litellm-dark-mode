@@ -1,7 +1,6 @@
 {
   "project_name": "Litellm Dark Mode",
   "project_description": "A zero-friction, reversible dark-mode patcher for the LiteLLM dashboard.",
-  "project_slug": "litellm-dark-mode",
   "repo_path": "/home/delorenj/code/litellm-dark-mode",
   "ticket_provider": {
     "type": "plane",
@@ -10,5 +9,6 @@
     "board_id": "",
     "state": "planned"
   },
-  "agents": {}
+  "agents": {},
+  "project_id": "litellm-dark-mode"
 }
